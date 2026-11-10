@@ -40,7 +40,7 @@ button{border:0;border-radius:999px;padding:14px 30px;min-width:118px;font-size:
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes spinReverse{to{transform:rotate(-360deg)}}
 @keyframes photoIn{from{opacity:0;transform:scale(.65) rotate(-7deg)}to{opacity:1;transform:scale(1) rotate(0)}}
-@media(max-width:520px){body{padding:10px}.card{padding:24px 16px}.button-zone{width:100%;height:90px}#yesBtn{left:auto;top:auto;transform:none}#yesBtn:hover{transform:translateY(-2px)}#noBtn{left:calc(50% + 70px);top:62%}.photo-stage{width:min(58vw,205px)}}
+@media(max-width:520px){body{padding:10px}.card{padding:24px 16px}.button-zone{width:100%;height:90px}#yesBtn{left:auto;top:auto;transform:none}#yesBtn:hover{transform:translateY(-2px)}#noBtn{left:auto;top:auto}.photo-stage{width:min(58vw,205px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -119,7 +119,6 @@ document.addEventListener("pointermove",e=>{
 
 // Touchscreen: the first touch/pointer press moves it smoothly; NO never performs an action.
 noBtn.addEventListener("pointerdown",e=>{e.preventDefault();moveNoButton();});
-noBtn.addEventListener("touchstart",e=>{e.preventDefault();moveNoButton();},{passive:false});
 noBtn.addEventListener("click",e=>{e.preventDefault();moveNoButton();});
 
 function addHeart(){
