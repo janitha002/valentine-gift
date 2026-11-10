@@ -18,7 +18,7 @@ h1{margin:0;color:var(--deep);font-family:Georgia,serif;font-size:clamp(2rem,7vw
 button{border:0;border-radius:999px;padding:14px 22px;min-width:118px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-size:1rem;font-weight:750;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent}
 #yesBtn{position:relative;left:auto;top:auto;transform:none;color:white;background:linear-gradient(135deg,#ff78a5,#ec3f7b);box-shadow:0 10px 22px rgba(236,63,123,.28);transition:transform .18s ease}
 #yesBtn:hover{transform:translateY(-3px) scale(1.04)}
-#noBtn{display:inline-flex;visibility:visible;opacity:1;position:relative;left:auto;top:auto;color:#9d6680;background:#f8e8ef;box-shadow:0 7px 16px rgba(140,75,105,.1);z-index:5;transition:left .48s cubic-bezier(.22,.8,.25,1),top .48s cubic-bezier(.22,.8,.25,1),transform .48s cubic-bezier(.22,.8,.25,1);will-change:left,top}
+.no-slot{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:118px;height:48px;position:relative}#noBtn{display:inline-flex;visibility:visible;opacity:1;position:relative;left:auto;top:auto;color:#9d6680;background:#f8e8ef;box-shadow:0 7px 16px rgba(140,75,105,.1);z-index:5;transition:left .48s cubic-bezier(.22,.8,.25,1),top .48s cubic-bezier(.22,.8,.25,1),transform .48s cubic-bezier(.22,.8,.25,1);will-change:left,top}
 .hint{margin:0;color:#bd8b9f;font-size:.86rem}
 .success{display:none;width:100%;animation:appear .8s ease both}
 .success h2{color:var(--deep);font-family:Georgia,serif;font-size:clamp(1.8rem,6vw,2.25rem);margin:10px 0 6px}
@@ -40,7 +40,7 @@ button{border:0;border-radius:999px;padding:14px 22px;min-width:118px;flex:0 0 a
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes spinReverse{to{transform:rotate(-360deg)}}
 @keyframes photoIn{from{opacity:0;transform:scale(.65) rotate(-7deg)}to{opacity:1;transform:scale(1) rotate(0)}}
-@media(max-width:520px){body{padding:10px;min-height:100svh}.card{width:100%;min-height:0;padding:26px 12px;border-radius:26px}.button-zone{width:100%;min-height:78px;height:auto;gap:10px;flex-wrap:nowrap}button{min-width:0;width:clamp(106px,34vw,124px);padding:13px 10px;font-size:.96rem}#yesBtn{left:auto;top:auto;transform:none}#yesBtn:hover{transform:translateY(-2px)}#noBtn{left:auto;top:auto;flex:0 0 auto}.photo-stage{width:min(62vw,215px)}}
+@media(max-width:520px){body{padding:10px;min-height:100svh}.card{width:100%;min-height:0;padding:26px 12px;border-radius:26px}.button-zone{width:100%;min-height:78px;height:auto;gap:10px;flex-wrap:nowrap}button{min-width:0;width:clamp(106px,34vw,124px);padding:13px 10px;font-size:.96rem}.no-slot{width:clamp(106px,34vw,124px);height:46px}#yesBtn{left:auto;top:auto;transform:none}#yesBtn:hover{transform:translateY(-2px)}#noBtn{left:auto;top:auto;flex:0 0 auto}.photo-stage{width:min(62vw,215px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -54,7 +54,7 @@ button{border:0;border-radius:999px;padding:14px 22px;min-width:118px;flex:0 0 a
 <p class="subtitle" style="margin-top:-18px;margin-bottom:14px;font-family:Georgia,serif;font-style:italic;color:#bd6688">You make my ordinary days feel special.</p>
 <div class="button-zone" id="buttonZone">
 <button id="yesBtn" type="button">Yes ❤️</button>
-<button id="noBtn" type="button">No 🙈</button>
+<span id="noSlot" class="no-slot"><button id="noBtn" type="button">No 🙈</button></span>
 </div>
 <p class="hint">Choose carefully… hehe 💕</p>
 </section>
@@ -77,6 +77,7 @@ button{border:0;border-radius:999px;padding:14px 22px;min-width:118px;flex:0 0 a
 <script>
 const card=document.getElementById("card");
 const zone=document.getElementById("buttonZone");
+const noSlot=document.getElementById("noSlot");
 const noBtn=document.getElementById("noBtn");
 const yesBtn=document.getElementById("yesBtn");
 const question=document.getElementById("question");
@@ -107,7 +108,20 @@ function moveNoButton(){
     x=minX+Math.random()*Math.max(0,maxX-minX);
     y=minY+Math.random()*Math.max(0,maxY-minY);
   }
-  noBtn.style.position="absolute";
+  // Keep the original NO slot in the row so YES never re-centers.
+  // On first move, reparent NO to the card, preserving its current screen position
+  // before animating to the new destination.
+  if(noBtn.parentElement!==card){
+    const initialLeft=noRect.left-cardRect.left;
+    const initialTop=noRect.top-cardRect.top;
+    noBtn.style.transition="none";
+    card.appendChild(noBtn);
+    noBtn.style.position="absolute";
+    noBtn.style.left=initialLeft+"px";
+    noBtn.style.top=initialTop+"px";
+    noBtn.getBoundingClientRect(); // force layout before enabling transition
+    noBtn.style.transition="";
+  }
   noBtn.style.left=x+"px";
   noBtn.style.top=y+"px";
   lastMove=Date.now();
@@ -123,8 +137,8 @@ document.addEventListener("pointermove",e=>{
 });
 
 // Touchscreen: the first touch/pointer press moves it smoothly; NO never performs an action.
-noBtn.addEventListener("pointerdown",e=>{e.preventDefault();moveNoButton();});
-noBtn.addEventListener("click",e=>{e.preventDefault();moveNoButton();});
+noBtn.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();moveNoButton();});
+noBtn.addEventListener("click",e=>{e.preventDefault();if(e.detail===0)moveNoButton();});
 
 function addHeart(){
   const h=document.createElement("span");h.className="floating-heart";
